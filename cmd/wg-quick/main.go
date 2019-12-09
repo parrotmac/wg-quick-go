@@ -6,8 +6,9 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/nmiculinic/wg-quick-go"
+	"github.com/parrotmac/wg-quick-go"
 	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 )
 
 func printHelp() {
@@ -32,7 +33,8 @@ func main() {
 	}
 
 	iface := flag.Lookup("iface").Value.String()
-	log := logrus.WithField("iface", iface)
+	logger := zap.NewExample()
+	log := logger.With(zap.String("iface", iface))
 
 	cfg := args[1]
 
@@ -42,12 +44,12 @@ func main() {
 	case os.IsNotExist(err):
 		if iface == "" {
 			iface = cfg
-			log = logrus.WithField("iface", iface)
+			log = logger.With(zap.String("iface", iface))
 		}
 		cfg = "/etc/wireguard/" + cfg + ".conf"
 		_, err = os.Stat(cfg)
 		if err != nil {
-			log.WithError(err).Errorln("cannot find config file")
+			log.Error("cannot find config file", zap.Error(err))
 			printHelp()
 		}
 	default:
