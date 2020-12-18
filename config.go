@@ -104,6 +104,7 @@ PrivateKey = {{ .PrivateKey | wgKey }}
 {{- if .PreDown }}{{ "\n" }}PreDown = {{ .PreDown }}{{ end }}
 {{- if .PostDown }}{{ "\n" }}PostDown = {{ .PostDown }}{{ end }}
 {{- if .SaveConfig }}{{ "\n" }}SaveConfig = {{ .SaveConfig }}{{ end }}
+{{- if .FirewallMark}}{{ "\n" }}FwMark = {{ .FirewallMark }}{{ end }}
 {{- range .Peers }}
 {{- "\n" }}
 [Peer]
@@ -225,6 +226,13 @@ func parseInterfaceLine(cfg *Config, lhs string, rhs string) error {
 			return err
 		}
 		cfg.SaveConfig = save
+	case "FwMark":
+		fwMark, err := strconv.ParseInt(rhs, 0, 64)
+		if err != nil {
+			return err
+		}
+		fwMarkPtr := int(fwMark)
+		cfg.FirewallMark = &fwMarkPtr
 	case "PrivateKey":
 		key, err := ParseKey(rhs)
 		if err != nil {
