@@ -6,8 +6,8 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/parrotmac/wg-quick-go"
 	"github.com/sirupsen/logrus"
+	"github.com/uinta-labs/wg-quick-go"
 	"go.uber.org/zap"
 )
 
