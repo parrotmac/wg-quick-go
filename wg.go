@@ -9,6 +9,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/pkg/errors"
 	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"
 	"golang.org/x/sys/unix"
@@ -203,6 +204,26 @@ func SyncLink(cfg *Config, iface string, log *zap.Logger) (netlink.Link, error) 
 		return nil, err
 	}
 	log.Info("set device up")
+
+	// TODO: Move to something else
+	err = netlink.RuleAdd(&netlink.Rule{
+		Src:    &net.IPNet{IP: net.ParseIP("0.0.0.0/0"), Mask: net.IPMask{}},
+		Invert: false,
+		Mark:   0xca6c,
+		Table:  51820,
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to add inverted rule")
+	}
+
+	err = netlink.RuleAdd(&netlink.Rule{
+		Table:             unix.RT_CLASS_MAIN,
+		SuppressPrefixlen: 0,
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to set suppres prefixlen")
+	}
+
 	return link, nil
 }
 
@@ -264,7 +285,8 @@ func SyncAddress(cfg *Config, link netlink.Link, log *zap.Logger) error {
 func fillRouteDefaults(rt *netlink.Route) {
 	// fill defaults
 	if rt.Table == 0 {
-		rt.Table = unix.RT_CLASS_MAIN
+		rt.Table = 51820
+		//rt.Table = unix.RT_CLASS_MAIN
 	}
 
 	if rt.Protocol == 0 {
